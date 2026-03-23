@@ -1,7 +1,6 @@
 package com.aniwond.app
 
 import android.graphics.Bitmap
-import android.net.Uri
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -9,16 +8,16 @@ import android.webkit.WebViewClient
 import android.widget.ProgressBar
 import androidx.core.view.isVisible
 
-class AniWebViewClient(private val progressBar: ProgressBar) : WebViewClient() {
+class AniWebViewClient(
+    private val progressBar: ProgressBar,
+    private val onUrlChanged: ((String) -> Unit)? = null
+) : WebViewClient() {
 
     companion object {
-        private const val MAIN_HOST = "aniworld.to"
-
         // Domains allowed to load in the main frame (e.g. video players)
         private val ALLOWED_NAVIGATE_HOSTS = setOf(
             "aniworld.to",
             "www.aniworld.to",
-            // Common video player/CDN hosts used by aniworld.to
             "voe.sx",
             "www.voe.sx",
             "streamtape.com",
@@ -86,13 +85,16 @@ class AniWebViewClient(private val progressBar: ProgressBar) : WebViewClient() {
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         progressBar.isVisible = true
+        onUrlChanged?.invoke(url)
     }
 
     override fun onPageFinished(view: WebView, url: String) {
         super.onPageFinished(view, url)
         progressBar.isVisible = false
+        onUrlChanged?.invoke(url)
         injectAdHideCSS(view)
         injectPopupBlockerJS(view)
+        injectVideoDetectorJS(view)
     }
 
     private fun injectAdHideCSS(view: WebView) {
@@ -130,6 +132,43 @@ class AniWebViewClient(private val progressBar: ProgressBar) : WebViewClient() {
                 document.querySelectorAll('a[target="_blank"]').forEach(function(a) {
                     a.target = '_self';
                 });
+            })();
+        """.trimIndent()
+        view.evaluateJavascript(js, null)
+    }
+
+    /**
+     * Scans for <video> elements and stores the first direct video URL in
+     * window._dlVideoUrl so the fragment can retrieve it via evaluateJavascript.
+     */
+    private fun injectVideoDetectorJS(view: WebView) {
+        val js = """
+            (function() {
+                if (typeof window._dlObserver === 'undefined') {
+                    window._dlVideoUrl = window._dlVideoUrl || null;
+
+                    function captureVideo(v) {
+                        var src = v.currentSrc || v.src ||
+                                  (v.querySelector('source') ? v.querySelector('source').src : null);
+                        if (src && src.length > 0 &&
+                            !src.startsWith('blob:') && !src.startsWith('data:')) {
+                            window._dlVideoUrl = src;
+                        }
+                    }
+
+                    document.querySelectorAll('video').forEach(captureVideo);
+
+                    window._dlObserver = new MutationObserver(function() {
+                        document.querySelectorAll('video').forEach(captureVideo);
+                    });
+                    window._dlObserver.observe(document.documentElement,
+                        { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+
+                    document.querySelectorAll('video').forEach(function(v) {
+                        v.addEventListener('loadedmetadata', function() { captureVideo(v); });
+                        v.addEventListener('play', function() { captureVideo(v); });
+                    });
+                }
             })();
         """.trimIndent()
         view.evaluateJavascript(js, null)

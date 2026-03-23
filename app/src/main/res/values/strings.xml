@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AniWorld</string>
+    <string name="nav_browser">Browser</string>
+    <string name="nav_downloads">Downloads</string>
+    <string name="fab_download_desc">Video herunterladen</string>
+    <string name="download_status_desc">Download-Status</string>
+    <string name="download_choice_title">Download starten</string>
+    <string name="download_episode">Diese Episode herunterladen</string>
+    <string name="download_season">Ganze Staffel herunterladen</string>
+    <string name="download_started">Download gestartet</string>
+    <string name="download_hls_unsupported">HLS-Streams werden nicht unterstützt</string>
+    <string name="download_season_complete">Staffel-Download abgeschlossen</string>
+    <string name="download_fetching_episodes">Episodenliste wird geladen…</string>
+    <string name="download_no_episodes_found">Keine Episoden-URLs gefunden</string>
+    <string name="download_no_video_found">Kein Video auf dieser Seite gefunden</string>
+    <string name="no_downloads">Noch keine Downloads</string>
+    <string name="download_status_running">Läuft…</string>
+    <string name="download_status_done">Abgeschlossen</string>
+    <string name="download_status_failed">Fehlgeschlagen</string>
+    <string name="download_status_pending">Ausstehend</string>
+    <string name="permission_storage_required">Speicher-Berechtigung wird für Downloads benötigt</string>
 </resources>

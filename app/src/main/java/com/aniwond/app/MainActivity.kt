@@ -1,88 +1,55 @@
 package com.aniwond.app
 
 import android.os.Bundle
-import android.view.KeyEvent
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var webView: WebView
-    private lateinit var progressBar: ProgressBar
-
-    companion object {
-        private const val HOME_URL = "https://aniworld.to"
-    }
+    private lateinit var bottomNav: BottomNavigationView
+    private var webViewFragment: WebViewFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        AdBlocker.init(applicationContext)
+        bottomNav = findViewById(R.id.bottom_nav)
 
-        progressBar = findViewById(R.id.progressBar)
-        webView = findViewById(R.id.webView)
-
-        configureWebView()
-
-        webView.webViewClient = AniWebViewClient(progressBar)
-        webView.webChromeClient = AniWebChromeClient(progressBar)
-
-        if (savedInstanceState != null) {
-            webView.restoreState(savedInstanceState)
+        if (savedInstanceState == null) {
+            webViewFragment = WebViewFragment()
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, webViewFragment!!, "webview")
+                .commit()
         } else {
-            webView.loadUrl(HOME_URL)
+            webViewFragment = supportFragmentManager
+                .findFragmentByTag("webview") as? WebViewFragment
+        }
+
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_browser -> {
+                    val frag = webViewFragment ?: WebViewFragment().also { webViewFragment = it }
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, frag, "webview")
+                        .commit()
+                    true
+                }
+                R.id.nav_downloads -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, DownloadsFragment(), "downloads")
+                        .commit()
+                    true
+                }
+                else -> false
+            }
         }
     }
 
-    private fun configureWebView() {
-        val settings: WebSettings = webView.settings
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.loadWithOverviewMode = true
-        settings.useWideViewPort = true
-        settings.builtInZoomControls = false
-        settings.displayZoomControls = false
-        settings.setSupportMultipleWindows(false)
-        settings.javaScriptCanOpenWindowsAutomatically = false
-        settings.mediaPlaybackRequiresUserGesture = false
-        settings.allowContentAccess = true
-        settings.allowFileAccess = false
-        settings.setSupportZoom(true)
-
-        // Enable hardware acceleration
-        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
-            webView.goBack()
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        webView.saveState(outState)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        webView.onResume()
-        webView.resumeTimers()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        webView.onPause()
-        webView.pauseTimers()
-    }
-
-    override fun onDestroy() {
-        webView.destroy()
-        super.onDestroy()
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onBackPressed() {
+        val wvFrag = supportFragmentManager.findFragmentByTag("webview") as? WebViewFragment
+        if (wvFrag != null && wvFrag.isVisible && wvFrag.onBackPressed()) return
+        @Suppress("DEPRECATION")
+        super.onBackPressed()
     }
 }

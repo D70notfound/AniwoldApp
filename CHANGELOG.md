@@ -7,6 +7,16 @@ und dieses Projekt verwendet [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-23
+
+### Added
+- Zwei-Tab-Navigation (Browser / Downloads) am unteren Bildschirmrand
+- Download-Button (FAB) erscheint automatisch auf Episode-Seiten
+- Einzelne Episode herunterladen: erkennt das aktive Video und startet den Download
+- Staffel herunterladen: lädt alle Episoden einer Staffel automatisch sequenziell herunter
+- Downloads-Tab: zeigt alle gestarteten und abgeschlossenen Downloads, tippen öffnet den Video-Player
+- Video-Erkennung via JavaScript: findet `<video>`-Elemente und speichert die URL
+
 ## [1.1.0] - 2025-10-07
 
 ### Fixed
